@@ -142,13 +142,12 @@ The `interval` value is the time in seconds that the frame should wait before po
 Once you have a location set up for storing your pictures (`/home/garote/Pictures/frame/` in the above configuration), make one or more subfolders in there, and start adding pictures into the subfolders.  They should all be in the following format:
 
 * PNG format
-* Height: 1404 pixels
-* Width: 1872 pixels
+* Height: 1200 pixels
+* Width: 1600 pixels
 
 Beyond that, if you want greater control over exactly how the images are rendered, you may wish to convert them in advance to the following:
 
-* Grayscale
-* 16 shades of gray (black and white included)
+* Six colors only: red, yellow, green, blue, black, and white.
 
 There are various ways to do this conversion, including different kinds of dithering you can apply.  Left as an exercise to the reader!  (I used automated Photoshop actions.)
 

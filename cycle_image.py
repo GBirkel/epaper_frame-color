@@ -59,7 +59,7 @@ def cycle_image(verbose=False, specific_id=None):
     if alarm_setting is None:
         print("Error reading alarm time.")
     else:
-        d = datetime.utcfromtimestamp(alarm_setting)
+        d = datetime.fromtimestamp(alarm_setting, UTC)
         tz_utc = fancytzutc()
         d = d.replace(tzinfo=tz_utc)
         print("PiSugar 3 last alarm time: %s" % (d.isoformat()))
@@ -87,7 +87,7 @@ def cycle_image(verbose=False, specific_id=None):
     if verbose:
         print("%s images in library." % (len(images)))
         if status['last_display'] is not None:
-            last_display_datetime = datetime.utcfromtimestamp(status['last_display'])
+            last_display_datetime = datetime.fromtimestamp(status['last_display'], UTC)
             print("Last run at %s." % (pretty_datetime(last_display_datetime)))
 
     chosen_image = None
@@ -100,7 +100,7 @@ def cycle_image(verbose=False, specific_id=None):
         if chosen_image['last_display'] is None:
             print("First time displaying this image.")
         else:
-            last_display_datetime = datetime.utcfromtimestamp(chosen_image['last_display'])
+            last_display_datetime = datetime.fromtimestamp(chosen_image['last_display'], UTC)
             print("Display count %s, last displayed %s." % (chosen_image['display_count'], last_display_datetime))
 
     image_path = os.path.join(config['library'], chosen_image['group_name'], chosen_image['filename'])
@@ -116,7 +116,7 @@ def cycle_image(verbose=False, specific_id=None):
     send_png_to_display(verbose, image_path, message)
     report_image_as_displayed(cur, verbose, chosen_image['id'], battery_charging_status, capacity)
 
-    current_date = calendar.timegm(datetime.utcnow().utctimetuple())
+    current_date = calendar.timegm(datetime.now(UTC).utctimetuple())
     status['last_display'] = current_date
     set_status(cur, status)
 

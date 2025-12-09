@@ -185,7 +185,7 @@ if __name__ == "__main__":
     if alarm_setting is None:
         print("Error reading alarm time.")
     else:
-        d = datetime.utcfromtimestamp(alarm_setting)
+        d = datetime.fromtimestamp(alarm_setting, UTC)
         tz_utc = fancytzutc()
         d = d.replace(tzinfo=tz_utc)
         print(d.isoformat())

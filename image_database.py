@@ -28,10 +28,7 @@
 from datetime import *
 import calendar
 import sqlite3
-import xmlrpc.client
 from sqlite3 import Error
-from xml.sax import saxutils
-from builtins import str
 
 
 def connect_to_local_db(db_file, verbose):
@@ -180,7 +177,7 @@ def insert_or_update_image(cur, verbose, image):
     if not row:
         if verbose:
             print('Adding new image %s/%s' % (image['group_name'], image['filename']))
-        image['creation_time'] = calendar.timegm(datetime.utcnow().utctimetuple())
+        image['creation_time'] = calendar.timegm(datetime.now(UTC).utctimetuple())
         cur.execute("""
             INSERT INTO images (
                 id,
@@ -291,7 +288,7 @@ def report_image_as_displayed(cur, verbose, image_id, charging, charge_level):
     :param verbose: whether we are verbose logging
     :param image_id: id of image
     """
-    current_date = calendar.timegm(datetime.utcnow().utctimetuple())
+    current_date = calendar.timegm(datetime.now(UTC).utctimetuple())
     data = {
         "id": image_id,
         "last_display": current_date
