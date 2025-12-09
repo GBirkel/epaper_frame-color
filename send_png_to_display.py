@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# png_to_bmp.py - send a PNG to the Waveshare 10.3 inch display.
+# png_to_bmp.py - send a PNG to the Waveshare display.
 # It is assumed the PNG is already in grayscale (of whatever bit depth) and the right size.
 # Garrett Birkel
 # Version 0.1
@@ -45,8 +45,8 @@ def send_png_to_display(verbose=False, input_file=None, message=None):
         output_file="/var/tmp/to_display.bmp"
     )
 
-    command_path = os.path.join( config['installpath'], "IT8951_Utility/it8951utility" )
-    display_command = command_path + " " + config['displaynumber'] + " 1 /var/tmp/to_display.bmp"
+    command_path = os.path.join( config['installpath'], "EPD_13in3e_Utility/eps13in3eutility" )
+    display_command = command_path + " /var/tmp/to_display.bmp"
     if message is not None:
         message = message[0:80]
         message = re.sub(r'"', "'", message)

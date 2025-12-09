@@ -1,6 +1,6 @@
 # Fancy e-paper photo frame
 
-### A project to build a nice 10.3-inch grayscale e-paper picture frame that updates once a day.
+### A project to build a nice 13.3-inch 6-color e-paper picture frame that updates once a day.
 
 * [Overview](../README.md)
 * [Materials List](materials.md)
@@ -18,7 +18,7 @@
 
 <img src="display.png" style="width:50%;max-width:256px;" />
 
-### [10.3-inch e-Ink display](https://www.waveshare.com/10.3inch-e-Paper-HAT.htm)
+### [13.3-inch e-Ink display](https://www.waveshare.com/10.3inch-e-Paper-HAT.htm)
 * 1872x1404
 * 16 shades of grayscale
 * 1 second refresh time (but could be a whole minute for all I care)

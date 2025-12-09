@@ -27,7 +27,7 @@
 # Copyright (c) 2025 Garrett Birkel
 
 # Set up the service like so:
-# sudo ln -s ~/Documents/epaper_frame/cycle_image.service /etc/systemd/system/
+# sudo ln -s ~/Documents/epaper_frame-color/cycle_image.service /etc/systemd/system/
 # sudo systemctl enable cycle_image.service
 
 import argparse, os, re, sys, random

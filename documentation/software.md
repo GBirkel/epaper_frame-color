@@ -1,6 +1,6 @@
 # Fancy e-paper photo frame
 
-### A project to build a nice 10.3-inch grayscale e-paper picture frame that updates once a day.
+### A project to build a nice 13.3-inch 6-color e-paper picture frame that updates once a day.
 
 * [Overview](../README.md)
 * [Materials List](materials.md)
@@ -91,15 +91,15 @@ Clone this repository:
 
 ```sh
 cd ~/Documents/
-git clone https://github.com/GBirkel/epaper_frame.git
-cd epaper_frame
+git clone https://github.com/GBirkel/epaper_frame-color.git
+cd epaper_frame-color
 ```
 
 Now build the C program:
 
 ```sh
-cd IT8951_Utility
-sudo make clear
+cd EPD_13in3e_Utility
+sudo make clean
 sudo make -j4
 cd ..
 ```
@@ -125,9 +125,8 @@ The file will look like this:
 ```xml
 <?xml version="1.0"?>
 <epaper>
-    <installpath>/home/garote/Documents/epaper_frame/</installpath>
+    <installpath>/home/garote/Documents/epaper_frame-color/</installpath>
     <library>/home/garote/Pictures/frame/</library>
-    <displaynumber>-1.23</displaynumber>
     <interval>86200</interval>
 </epaper>
 ```
@@ -135,12 +134,6 @@ The file will look like this:
 You need to edit the `installpath` section to match the full path of the folder you placed this code into.  The results of the `pwd` command above are what you'd put here.
 
 Next is the `library` section.  This points to the folder on the drive where you intend to store all the images to send to the display.  (I made a subfolder in the standard `Pictures` folder and used that.)
-
-The `displaynumber` section is where you put the display version number.  This can be found prited on a label attached somewhere on the ribbon cable assembly for the display.  For example, mine was here:
-
-<a data-flickr-embed="true" href="https://www.flickr.com/photos/57897385@N07/54371888924/in/dateposted/" title="2025-02-17-180139-IMG_6001"><img src="https://live.staticflickr.com/65535/54371888924_c90ceda52a_z.jpg" style="width:70%;max-width:512px;" alt="2025-02-17-180139-IMG_6001"/></a>
-
-Yours may be different, and possibly in a different place.
 
 The `interval` value is the time in seconds that the frame should wait before powering itself up again.  By default it's set to just under 24 hours, to account for the time the program needs to run.
 
@@ -164,14 +157,14 @@ There are various ways to do this conversion, including different kinds of dithe
 Once you've got a bunch of pictures in your subfolders, the program needs to index them.  The idea is, we do this once after adding pictures, so the program doesn't need to waste power re-indexing every time it starts.
 
 ```sh
-cd ~/Documents/epaper_frame/
+cd ~/Documents/epaper_frame-color/
 sudo python3 png_inventory.py
 ```
 
 Expect a bunch of output that looks like this:
 
 ```
-Opening local database: /home/garote/Documents/epaper_frame/images.db
+Opening local database: /home/garote/Documents/epaper_frame-color/images.db
 Creating tables if needed
 Fetching all image groups from database
 Fetching all image groups from database

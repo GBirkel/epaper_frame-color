@@ -3,7 +3,7 @@
 #
 # png_to_bmp.py - covert a PNG to a 16-color grayscale BMP.
 # No resizing or color processing is done here.
-# It is assumed the PNG is already in grayscale (of whatever bit depth) and the right size.
+# It is assumed the PNG is already in 6 colors and the right size.
 # Garrett Birkel
 # Version 0.1
 #
@@ -36,10 +36,10 @@ def png_to_bmp(verbose=False, input_file=None, output_file=None):
     img = Image.open(input_file)
 
     # Convert to greyscale
-    img.convert('L')
+    #img.convert('L')
 
-    # Reduce the number of colors to 16
-    img = img.quantize(colors=16, method=Image.FASTOCTREE)
+    # Reduce the number of colors to 6
+    img = img.quantize(colors=6, method=Image.FASTOCTREE)
     
     # Save the image as BMP
     img.save(output_file, format='BMP')

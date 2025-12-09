@@ -1,6 +1,6 @@
 # Fancy e-paper photo frame
 
-### A project to build a nice 10.3-inch grayscale e-paper picture frame that updates once a day.
+### A project to build a nice 13.3-inch 6-color e-paper picture frame that updates once a day.
 
 * [Overview](../README.md)
 * [Materials List](materials.md)
@@ -72,7 +72,7 @@ The other great thing about the PiSugar 3 is this header:
 
 You know that [6-pin Molex Connector Cable, 1.25mm pitch](https://www.adafruit.com/product/4926) from the parts list?  It plugs right into that.  And you only need to connect four of the wires coming off it to the Raspberry Pi to get all the same functionality that you would if you installed the board the normal way.
 
-Since we're on the subject of connectors, here are the accessories that come with the 10.3-inch e-paper display:
+Since we're on the subject of connectors, here are the accessories that come with the 13.3-inch e-paper display:
 
 <a data-flickr-embed="true" href="https://www.flickr.com/photos/57897385@N07/54372078340/in/dateposted/" title="2025-02-17-163754-IMG_5997"><img src="https://live.staticflickr.com/65535/54372078340_0e89ac3fa7_z.jpg" style="width:70%;max-width:512px;" alt="2025-02-17-163754-IMG_5997"/></a>
 

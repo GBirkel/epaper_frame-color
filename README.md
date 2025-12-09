@@ -1,6 +1,6 @@
 # Fancy e-paper photo frame
 
-### A project to build a nice 10.3-inch grayscale e-paper picture frame that updates once a day.
+### A project to build a nice 13.3-inch 6-color e-paper picture frame that updates once a day.
 
 ![Video of the frame in action, with cat for size](https://github.com/user-attachments/assets/2f5732ef-21fd-4f81-a468-279e1d1b35e0)
 

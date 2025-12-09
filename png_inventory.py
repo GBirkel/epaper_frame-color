@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# png_to_bmp.py - send a PNG to the Waveshare 10.3 inch display.
-# It is assumed the PNG is already in grayscale (of whatever bit depth) and the right size.
+# png_inventory.py - add to a database of PNG files for display.
 # Garrett Birkel
 # Version 0.1
 #
