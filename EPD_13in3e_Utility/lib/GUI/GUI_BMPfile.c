@@ -194,13 +194,16 @@ static void Bitmap_format_Matrix(UBYTE *dst,UBYTE *src)
 	}	
 }
 
+// Note that this function has been customized for the 6-color e-Paper display
 static void DrawMatrix(UWORD Xpos, UWORD Ypos,UWORD Width, UWORD High,const UBYTE* Matrix)
 {
 	UWORD i,j,x,y;
 	UBYTE R,G,B;
 	UBYTE temp1,temp2;
-	double Gray;
-	
+	uint16_t color;
+
+	uint16_t disp_x, disp_y;
+
 	for (y=0,j=Ypos;y<High;y++,j++)
 	{
  		for (x=0,i=Xpos;x<Width;x++,i++)
@@ -238,12 +241,32 @@ static void DrawMatrix(UWORD Xpos, UWORD Ypos,UWORD Width, UWORD High,const UBYT
 				default:
 				break;
 			}
-		
-			Gray = (R*299 + G*587 + B*114 + 500) / 1000;
-            if(isColor && i%3==2)
-				Paint_SetPixel(i, j, Gray/2);
-			else
-				Paint_SetPixel(i, j, Gray);
+
+            color = 0; //Default to black
+
+			if(B > 128 && G > 128 && R > 128){
+                color = 1;//White
+			}else if(B < 128 && G > 128 && R > 128){
+				color = 2;//Yellow
+			}else if(B < 128 && G < 128 && R > 128){
+				color = 3;//Red
+			// }else if(B < 128 && G == 128 && R > 128){
+			// 	color = 4;//Orange
+			}else if(B > 128 && G < 128 && R < 128){
+				color = 5;//Blue
+			}else if(B < 128 && G > 128 && R < 128){
+				color = 6;//Green
+			}
+
+			// If the image is wider than it is tall, swap the coordinates			
+			if (Width > High) {
+				disp_x = Ypos + y;
+				disp_y = Xpos + x;
+			} else {
+				disp_x = Xpos + x;
+				disp_y = Ypos + y;
+			}
+            Paint_SetPixel(disp_x, disp_y, color);
 		}
 	}
 }
@@ -411,7 +434,10 @@ UBYTE GUI_ReadBmp(const char *path, UWORD x, UWORD y)
 		break;
 	}
 
+	printf("GUI_BMPfile: Bitmap_format_Matrix\r\n");
 	Bitmap_format_Matrix(bmp_dst_buf,bmp_src_buf);
+
+	printf("GUI_BMPfile: DrawMatrix\r\n");
 	DrawMatrix(x, y,InfoHead.biWidth, InfoHead.biHeight, bmp_dst_buf);
 
     free(bmp_src_buf);
