@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<epaper>
+    <installpath>/home/garote/Documents/epaper_frame/</installpath>
+    <library>/home/garote/Pictures/frame/</library>
+    <displaynumber>-1.23</displaynumber>
+    <interval>86200</interval>
+</epaper>
