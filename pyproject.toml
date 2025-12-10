@@ -1,0 +1,13 @@
+[project]
+name = "epaper_frame-color"
+version = "0.1.0"
+description = "Tools to display images on a Waveshare 13.3 inch e-paper display (6 color version)."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "PIL",
+]
+authors = [
+    {name = "Garrett Birkel", email = "gbirkel@gmail.com"},
+]
+license = {text = "MIT"}

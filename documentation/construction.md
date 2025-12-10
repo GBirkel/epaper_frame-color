@@ -162,6 +162,8 @@ I found these two diagrams helpful while I figured this out.  These are two alte
 
 <img src="pi_gpio_ports.png" style="width:85%;max-width:640px;" />
 
+There's also <a href="https://pinout.xyz/pinout/3v3_power">this handy in-depth reference</a>.
+
 Continue to:
 
 # [Software](software.md)

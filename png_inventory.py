@@ -25,7 +25,7 @@
 #
 # Copyright (c) 2025 Garrett Birkel
 
-import argparse, os, re, sys
+import argparse, os, re, sys, logging
 from common_utils import *
 from image_database import *
 
@@ -35,26 +35,28 @@ def png_inventory(verbose=False, library_path=None, database_file=None):
     conn = None
     cur = None
 
+    logger = logging.getLogger("epaper_frame")
+
     # create a database connection
-    conn = connect_to_local_db(database_file, verbose)
+    conn = connect_to_local_db(database_file)
     if not conn:
-        print("Database could not be opened")
+        logger.error("Database could not be opened")
         os._exit(os.EX_IOERR)
-    create_tables_if_missing(conn, verbose)
+    create_tables_if_missing(connect_to_local_db)
     cur = conn.cursor()
 
-    groups = get_image_group_dictionaries(cur, verbose)
+    groups = get_image_group_dictionaries(cur)
     group_dirs = []
     for _, subdirs, _ in os.walk( library_path ):
         for dirname in subdirs:
             if dirname not in groups['name_to_id']:
-                get_or_insert_image_group(cur, verbose, dirname)
+                get_or_insert_image_group(cur, dirname)
 
-    groups = get_image_group_dictionaries(cur, verbose)
+    groups = get_image_group_dictionaries(cur)
     new_images = 0
 
     for group_name in groups['name_to_id']:
-        print('Group: %s (%s)' % (group_name, groups['name_to_id'][group_name]))
+        logger.info('Group: %s (%s)' % (group_name, groups['name_to_id'][group_name]))
         path = os.path.join( library_path, group_name )
         for _, _, filenames in os.walk( path ):
             for filename in filenames:
@@ -76,13 +78,13 @@ def png_inventory(verbose=False, library_path=None, database_file=None):
                             'creation_time': None,
                             'removed': False
                         }
-                        inserted = insert_or_update_image(cur, verbose, one_record)
+                        inserted = insert_or_update_image(cur, one_record)
                         if inserted:
                             new_images += 1
 
-    images = get_all_images(cur, verbose)
+    images = get_all_images(cur)
 
-    print("%s images total, %s new as of this scan." % (len(images), new_images))
+    logger.info("%s images total, %s new as of this scan." % (len(images), new_images))
 
     finish_with_database(conn, cur)
 
@@ -90,7 +92,7 @@ def png_inventory(verbose=False, library_path=None, database_file=None):
 if __name__ == "__main__":
     config = read_config()
     if config is None:
-        print('Error reading your config.xml file!')
+        logger.error('Error reading your config.xml file!')
         sys.exit(2)
 
     args = argparse.ArgumentParser(description="Make an inventory of PNG files in the image library")
@@ -99,6 +101,8 @@ if __name__ == "__main__":
     args.add_argument('--path', type=str, default=config['library'], dest='library_path',
                       help='Path to library', required=False)
     args = args.parse_args()
+
+    set_up_logger()
 
     database_file = os.path.join(config['installpath'], 'images.db')
     png_inventory(

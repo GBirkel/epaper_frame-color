@@ -24,6 +24,7 @@
 # 3. This notice may not be removed or altered from any source distribution.
 import struct
 from datetime import *
+from common_utils import *
 
 
 PiSugar3_Addr = 0x57
@@ -168,30 +169,32 @@ if __name__ == "__main__":
     import time
     from common_utils import fancytzutc
 
+    logger = set_up_logger()
+
     # Instantiate the battery reader and do a first measurement
     piSugarBattery = PiSugarBattery()
     battery_charging_status = piSugarBattery.charging_status()
     if battery_charging_status is not None:
         initial_reading = piSugarBattery.refine_capacity()
-        print("PiSugar 3 battery initial reading: %2i%%." % (initial_reading))
+        logger.info("PiSugar 3 battery initial reading: %2i%%." % (initial_reading))
 
     real_time_clock = piSugarBattery.get_real_time_clock()
     if real_time_clock is None:
-        print("Error reading real time clock.")
+        logger.error("Error reading real time clock.")
     else:
-        print(real_time_clock.isoformat())
+        logger.info(real_time_clock.isoformat())
 
     alarm_setting = piSugarBattery.get_alarm_timer()
     if alarm_setting is None:
-        print("Error reading alarm time.")
+        logger.error("Error reading alarm time.")
     else:
         d = datetime.fromtimestamp(alarm_setting, UTC)
         tz_utc = fancytzutc()
         d = d.replace(tzinfo=tz_utc)
-        print(d.isoformat())
+        logger.debug(d.isoformat())
 
         formatted = f'{d:%I}:{d:%M}:{d:%S} {d:%p}'
-        print("Alarm time: %s seconds, or %s." % (alarm_setting, formatted))
+        logger.info("Alarm time: %s seconds, or %s." % (alarm_setting, formatted))
 
     #piSugarBattery.set_alarm_for_seconds_from_now(180)
 

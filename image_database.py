@@ -28,34 +28,33 @@
 from datetime import *
 import calendar
 import sqlite3
+import logging
 from sqlite3 import Error
 
 
-def connect_to_local_db(db_file, verbose):
+logger = logging.getLogger("epaper_frame")
+
+def connect_to_local_db(db_file):
     """ create a database connection to the SQLite database
         specified by the db_file
     :param db_file: database file
-    :param verbose: whether we are verbose logging
     :return: Connection object or None
     """
     conn = None
-    if verbose:
-        print('Opening local database: %s' % db_file)
+    logger.info('Opening local database: %s' % db_file)
     try:
         conn = sqlite3.connect(db_file)
     except Error as e:
-        print(e)
+        logger.error(e)
 
     return conn
 
 
-def create_tables_if_missing(conn, verbose):
+def create_tables_if_missing(conn):
     """ create needed database tables if missing
     :param conn: database connection
-    :param verbose: whether we are verbose logging
     """
-    if verbose:
-        print('Creating tables if needed')
+    logger.debug('Creating tables if needed')
 
     conn.execute("""
         CREATE TABLE IF NOT EXISTS status (
@@ -137,18 +136,16 @@ def set_status(cur, status):
     cur.execute("UPDATE status SET last_sync = ?, last_display = ?", (status['last_sync'], status['last_display']))
 
 
-def get_or_insert_image_group(cur, verbose, name):
+def get_or_insert_image_group(cur, name):
     """ fetch or insert the record for an image group
     :param cur: database cursor
-    :param verbose: whether we are verbose logging
     :param name: group name
     """
     data = {'name': name}
     cur.execute("SELECT id FROM image_groups WHERE name = :name", data)
     row = cur.fetchone()
     if not row:
-        if verbose:
-            print('Adding new image group with name: %s' % (name))
+        logger.debug('Adding new image group with name: %s' % (name))
         cur.execute("""
             INSERT INTO image_groups ( name ) VALUES ( :name )""", data)
         cur.execute("SELECT id FROM image_groups WHERE name = :name", data)
@@ -160,10 +157,9 @@ def get_or_insert_image_group(cur, verbose, name):
     return record
 
 
-def insert_or_update_image(cur, verbose, image):
+def insert_or_update_image(cur, image):
     """ insert a new image or update any preexisting one with a matching group id and name
     :param cur: database cursor
-    :param verbose: whether we are verbose logging
     :param image: image record
     :return: True if the image id did not already exist
     """
@@ -175,8 +171,7 @@ def insert_or_update_image(cur, verbose, image):
 
     row = cur.fetchone()
     if not row:
-        if verbose:
-            print('Adding new image %s/%s' % (image['group_name'], image['filename']))
+        logger.debug('Adding new image %s/%s' % (image['group_name'], image['filename']))
         image['creation_time'] = calendar.timegm(datetime.now(UTC).utctimetuple())
         cur.execute("""
             INSERT INTO images (
@@ -203,8 +198,7 @@ def insert_or_update_image(cur, verbose, image):
         return True
     else:
         image['id'] = row[0]
-        if verbose:
-            print('Updating existing image %s/%s' % (image['group_name'], image['filename']))
+        logger.debug('Updating existing image %s/%s' % (image['group_name'], image['filename']))
         cur.execute("""
             UPDATE images SET
                 filename = :filename,
@@ -219,15 +213,13 @@ def insert_or_update_image(cur, verbose, image):
         return False
 
 
-def get_image_group_dictionaries(cur, verbose):
+def get_image_group_dictionaries(cur):
     """ get all the image groups and build dictonaries
     for mapping id to name and name to id.
     :param cur: database cursor
-    :param verbose: whether we are verbose logging
     :return: An object containing two dictionaries
     """
-    if verbose:
-        print('Fetching all image groups from database')
+    logger.debug('Fetching all image groups from database')
     cur.execute("""SELECT id, name FROM image_groups""")
     rows = cur.fetchall()
     id_to_name = {}
@@ -241,15 +233,13 @@ def get_image_group_dictionaries(cur, verbose):
     return results
 
 
-def get_all_images(cur, verbose):
+def get_all_images(cur):
     """ get all images in the database
     :param cur: database cursor
-    :param verbose: whether we are verbose logging
     :return: An array of objects
     """
-    image_groups = get_image_group_dictionaries(cur, verbose)
-    if verbose:
-        print('Fetching all images from database')
+    image_groups = get_image_group_dictionaries(cur)
+    logger.debug('Fetching all images from database')
     cur.execute("""
         SELECT
             id,
@@ -281,11 +271,10 @@ def get_all_images(cur, verbose):
     return records
 
 
-def report_image_as_displayed(cur, verbose, image_id, charging, charge_level):
+def report_image_as_displayed(cur, image_id, charging, charge_level):
     """ update the record for an image showing that it was the one most recently displayed,
     and make a history entry for the event as well.
     :param cur: database cursor
-    :param verbose: whether we are verbose logging
     :param image_id: id of image
     """
     current_date = calendar.timegm(datetime.now(UTC).utctimetuple())

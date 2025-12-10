@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# png_to_bmp.py - covert a PNG to a 16-color grayscale BMP.
+# png_to_bmp.py - covert a PNG to a 6-color BMP.
 # No resizing or color processing is done here.
-# It is assumed the PNG is already in 6 colors and the right size.
+# It is assumed the PNG has already been processed to look acceptable
+# when reduced to 6 colors, or is already in 6 colors, and is the right size.
 # Garrett Birkel
 # Version 0.1
 #
@@ -29,6 +30,7 @@
 
 import argparse, os, re, sys
 from PIL import Image
+from common_utils import *
 
 
 def png_to_bmp(verbose=False, input_file=None, output_file=None):
@@ -39,6 +41,8 @@ def png_to_bmp(verbose=False, input_file=None, output_file=None):
     #img.convert('L')
 
     # Reduce the number of colors to 6
+    # The image should already be prepared with the required 6 color palette,
+    # but this forces it for compression purposes.
     img = img.quantize(colors=6, method=Image.FASTOCTREE)
     
     # Save the image as BMP
@@ -54,6 +58,8 @@ if __name__ == "__main__":
     args.add_argument('--out', type=argparse.FileType('wb'), default=sys.stdout, dest='output_file',
                       help='Output BMP file', required=True)
     args = args.parse_args()
+
+    set_up_logger()
 
     png_to_bmp(
         verbose=args.verbose,

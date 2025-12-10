@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, logging
 import xml.dom.minidom
 from datetime import datetime, tzinfo, timedelta
 
@@ -14,6 +14,20 @@ def read_config():
 		return config
 	else:
 		return None
+
+
+def set_up_logger():
+    logger = logging.getLogger("epaper_frame")
+    if logger.hasHandlers():
+        logger.handlers.clear()
+    logger.setLevel("DEBUG")
+    formatter = logging.Formatter(
+        fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p"
+    )
+    streamHandler = logging.StreamHandler()
+    streamHandler.setFormatter(formatter)
+    logger.addHandler(streamHandler)
+    return logger
 
 
 # Subclass of tzinfo swiped mostly from dateutil

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
-# png_to_bmp.py - send a PNG to the Waveshare display.
+# send_png_to_display.py - send a PNG to the Waveshare display.
 # It is assumed the PNG is already in grayscale (of whatever bit depth) and the right size.
 # Garrett Birkel
 # Version 0.1
@@ -26,17 +26,19 @@
 #
 # Copyright (c) 2025 Garrett Birkel
 
-import argparse, os, re, sys
+import argparse, os, re, sys, logging
 import subprocess
-from PNG_to_BMP.png_to_bmp import png_to_bmp
+from png_to_bmp import png_to_bmp
 from common_utils import *
 
 
 def send_png_to_display(verbose=False, input_file=None, message=None):
 
+    logger = logging.getLogger("epaper_frame")
+
     config = read_config()
     if config is None:
-        print('Error reading your config.xml file!')
+        logger.error('Error reading your config.xml file!')
         sys.exit(2)
 
     png_to_bmp(
@@ -55,7 +57,7 @@ def send_png_to_display(verbose=False, input_file=None, message=None):
         display_command += ' "' + message + '"'
     output = subprocess.check_call(display_command, shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
     if verbose:
-        print(output)
+        logger.debug(output)
 
 
 if __name__ == "__main__":
@@ -65,6 +67,8 @@ if __name__ == "__main__":
     args.add_argument('--in', type=argparse.FileType('rb'), default=sys.stdin, dest='input_file',
                       help='Input PNG file', required=True)
     args = args.parse_args()
+
+    set_up_logger()
 
     send_png_to_display(
         verbose=args.verbose,

@@ -30,7 +30,7 @@
 # sudo ln -s ~/Documents/epaper_frame-color/cycle_image.service /etc/systemd/system/
 # sudo systemctl enable cycle_image.service
 
-import argparse, os, re, sys, random
+import argparse, os, re, sys, random, logging
 import subprocess
 from send_png_to_display import send_png_to_display
 from datetime import *
@@ -41,32 +41,33 @@ from pisugar_battery import PiSugarBattery
 
 def cycle_image(verbose=False, specific_id=None):
 
+    logger = logging.getLogger("epaper_frame")
+
     # Instantiate the battery reader and do a first measurement
     piSugarBattery = PiSugarBattery()
     battery_charging_status = piSugarBattery.charging_status()
     if battery_charging_status is not None:
         initial_reading = piSugarBattery.refine_capacity()
-        if verbose:
-            print("PiSugar 3 battery initial reading: %2i%%." % (initial_reading))
+        logger.debug("PiSugar 3 battery initial reading: %2i%%." % (initial_reading))
 
     real_time_clock = piSugarBattery.get_real_time_clock()
     if real_time_clock is None:
-        print("Error reading real time clock.")
+        logger.error("Error reading real time clock.")
     else:
-        print("PiSugar 3 clock time: %s" % (real_time_clock.isoformat()))
+        logger.info("PiSugar 3 clock time: %s" % (real_time_clock.isoformat()))
 
     alarm_setting = piSugarBattery.get_alarm_timer()
     if alarm_setting is None:
-        print("Error reading alarm time.")
+        logger.error("Error reading alarm time.")
     else:
         d = datetime.fromtimestamp(alarm_setting, UTC)
         tz_utc = fancytzutc()
         d = d.replace(tzinfo=tz_utc)
-        print("PiSugar 3 last alarm time: %s" % (d.isoformat()))
+        logger.info("PiSugar 3 last alarm time: %s" % (d.isoformat()))
 
     config = read_config()
     if config is None:
-        print('Error reading your config.xml file!')
+        logger.error('Error reading your config.xml file!')
         sys.exit(2)
 
     conn = None
@@ -74,21 +75,21 @@ def cycle_image(verbose=False, specific_id=None):
 
     # create a database connection
     database_file = os.path.join(config['installpath'], 'images.db')
-    conn = connect_to_local_db(database_file, verbose)
+    conn = connect_to_local_db(database_file)
     if not conn:
-        print("Database could not be opened")
+        logger.error("Database could not be opened")
         os._exit(os.EX_IOERR)
-    create_tables_if_missing(conn, verbose)
+    create_tables_if_missing(conn)
     cur = conn.cursor()
 
     status = get_status_or_defaults(cur, None, None)
 
-    images = get_all_images(cur, verbose)
+    images = get_all_images(cur)
     if verbose:
-        print("%s images in library." % (len(images)))
+        logger.info("%s images in library." % (len(images)))
         if status['last_display'] is not None:
             last_display_datetime = datetime.fromtimestamp(status['last_display'], UTC)
-            print("Last run at %s." % (pretty_datetime(last_display_datetime)))
+            logger.info("Last run at %s." % (pretty_datetime(last_display_datetime)))
 
     chosen_image = None
     if len(images) > 0:
@@ -96,12 +97,12 @@ def cycle_image(verbose=False, specific_id=None):
         chosen_image = images[chosen_index]
 
     if verbose:
-        print("Chose image %s/%s." % (chosen_image['group_name'], chosen_image['filename']))
+        logger.info("Chose image %s/%s." % (chosen_image['group_name'], chosen_image['filename']))
         if chosen_image['last_display'] is None:
-            print("First time displaying this image.")
+            logger.info("First time displaying this image.")
         else:
             last_display_datetime = datetime.fromtimestamp(chosen_image['last_display'], UTC)
-            print("Display count %s, last displayed %s." % (chosen_image['display_count'], last_display_datetime))
+            logger.info("Display count %s, last displayed %s." % (chosen_image['display_count'], last_display_datetime))
 
     image_path = os.path.join(config['library'], chosen_image['group_name'], chosen_image['filename'])
 
@@ -111,10 +112,10 @@ def cycle_image(verbose=False, specific_id=None):
         capacity = piSugarBattery.refine_capacity()
         message = "%2i%%" % capacity
         if verbose:
-            print("PiSugar 3 battery second reading: %2i%%." % (capacity))
+            logger.info("PiSugar 3 battery second reading: %2i%%." % (capacity))
 
     send_png_to_display(verbose, image_path, message)
-    report_image_as_displayed(cur, verbose, chosen_image['id'], battery_charging_status, capacity)
+    report_image_as_displayed(cur, chosen_image['id'], battery_charging_status, capacity)
 
     current_date = calendar.timegm(datetime.now(UTC).utctimetuple())
     status['last_display'] = current_date
@@ -124,21 +125,21 @@ def cycle_image(verbose=False, specific_id=None):
 
     if battery_charging_status is None:
         if verbose:
-            print("PiSugar 3 battery status is undetermined.  Will remain powered on and enable wifi.")
+            logger.warning("PiSugar 3 battery status is undetermined.  Will remain powered on and enable wifi.")
         subprocess.check_call("sudo iwconfig wlan0 txpower on", shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
 
     elif battery_charging_status == True:
         if verbose:
-            print("PiSugar 3 battery is charging.  Will remain powered on and enable wifi.")
+            logger.info("PiSugar 3 battery is charging.  Will remain powered on and enable wifi.")
         subprocess.check_call("sudo iwconfig wlan0 txpower on", shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
 
     else:
         if verbose:
-            print("On battery power.  Will disable wifi and power down automatically.")
+            logger.info("On battery power.  Will disable wifi and power down automatically.")
         subprocess.check_call("sudo iwconfig wlan0 txpower off", shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
 
         if piSugarBattery.set_alarm_for_seconds_from_now(int(config['interval'])) == False:
-            print("Failed to set new wakeup time in PiSugar 3!")
+            logger.error("Failed to set new wakeup time in PiSugar 3!")
 
         subprocess.check_call("sudo shutdown -P now", shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
 
@@ -150,6 +151,8 @@ if __name__ == "__main__":
     args.add_argument('--id', type=str, default=None, dest='specific_id',
                       help='Specific image ID to display', required=False)
     args = args.parse_args()
+
+    set_up_logger()
 
     cycle_image(
         verbose=args.verbose,
