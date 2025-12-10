@@ -261,10 +261,10 @@ static void DrawMatrix(UWORD Xpos, UWORD Ypos,UWORD Width, UWORD High,const UBYT
 			// If the image is wider than it is tall, swap the coordinates			
 			if (Width > High) {
 				disp_x = Ypos + y;
-				disp_y = Xpos + x;
+				disp_y = 1599 - (Xpos + x);	// Vertical flip
 			} else {
 				disp_x = Xpos + x;
-				disp_y = Ypos + y;
+				disp_y = 1599 - (Ypos + y); // Vertical flip
 			}
             Paint_SetPixel(disp_x, disp_y, color);
 		}
