@@ -67,7 +67,7 @@ class PiSugarBattery:
             yrRaw = self._bus.read_byte_data(PiSugar3_Addr, 0x31)
             mon = self._bus.read_byte_data(PiSugar3_Addr, 0x32)
             dayRaw = self._bus.read_byte_data(PiSugar3_Addr, 0x33)
-            h = self._bus.read_byte_data(PiSugar3_Addr, 0x35)
+            hourRaw = self._bus.read_byte_data(PiSugar3_Addr, 0x35)
             minRaw = self._bus.read_byte_data(PiSugar3_Addr, 0x36)
             secRaw = self._bus.read_byte_data(PiSugar3_Addr, 0x37)
         except:
@@ -78,9 +78,10 @@ class PiSugarBattery:
             # e.g. 0x36 is actually 36 minutes, not 54 minutes.
             yr = hexAsDec(yrRaw)
             day = hexAsDec(dayRaw)
+            hour = hexAsDec(hourRaw)
             min = hexAsDec(minRaw)
             sec = hexAsDec(secRaw)
-            clock_as_datetime = datetime(yr + 2000, mon, day, hour=h, minute=min, second=sec, tzinfo=timezone.utc)
+            clock_as_datetime = datetime(yr + 2000, mon, day, hour=hour, minute=min, second=sec, tzinfo=timezone.utc)
         except ValueError:
             return None
         return clock_as_datetime
