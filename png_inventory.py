@@ -42,7 +42,7 @@ def png_inventory(verbose=False, library_path=None, database_file=None):
     if not conn:
         logger.error("Database could not be opened")
         os._exit(os.EX_IOERR)
-    create_tables_if_missing(connect_to_local_db)
+    create_tables_if_missing(conn)
     cur = conn.cursor()
 
     groups = get_image_group_dictionaries(cur)
