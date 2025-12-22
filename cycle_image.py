@@ -30,7 +30,7 @@
 # sudo ln -s ~/Documents/epaper_frame-color/cycle_image.service /etc/systemd/system/
 # sudo systemctl enable cycle_image.service
 
-import argparse, os, re, sys, random, logging, traceback, calendar
+import argparse, os, re, sys, random, logging, traceback, calendar, shutil, urllib.request
 import subprocess
 from subprocess import Popen,call,PIPE,STDOUT
 from send_png_to_display import send_png_to_display
@@ -160,11 +160,19 @@ def update_check(pythonPath):
         if (server_client_version <= client_version.client_version):
             return
         logger.info('Updating Client from v%s to v%s' % (client_version.client_version, server_client_version))
-        result = call(["curl", "--silent", "https://garote.bdmonkeys.net/epaper_client/client.zip", "-o", os.path.join(os.path.dirname(__file__), 'client.zip')])
+        zipped_client = urllib.request.urlopen("https://garote.bdmonkeys.net/epaper_client/client.zip")
+        zipped_client_file = open(os.path.join(os.path.dirname(__file__), 'client.zip'), "wb")
+        shutil.copyfileobj(zipped_client, zipped_client_file)
+        zipped_client.close()
+        zipped_client_file.close()
         result = call(["unzip", "-o", "-d", ".", "client.zip"])
         #call(["xattr", "-d", "com.apple.quarantine" ,"./client.command"])
         logger.info('Updated to new client version.  Restarting %s' % (' '.join([pythonPath] + sys.argv)))
         os.execv(pythonPath, [pythonPath] + sys.argv)
+    except urllib.error.HTTPError as e:
+        logger.error("HTTP Error during update check: %s" % (str(e)))
+    except urllib.error.URLError as e:
+        logger.error("URL Error during update check: %s" % (str(e)))
     except Exception as e:
         s = traceback.format_exception(e)
         logger.error(''.join(s))
