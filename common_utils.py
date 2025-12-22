@@ -1,6 +1,10 @@
-import os, sys, logging
+import os, re, sys, logging, traceback, shutil, urllib.request
 import xml.dom.minidom
-from datetime import datetime, tzinfo, timedelta
+from datetime import tzinfo, timedelta
+import client_version
+
+
+logger = logging.getLogger("epaper_frame")
 
 
 # Read in the standard configuration file and return its parsed contents
@@ -91,6 +95,38 @@ def pretty_datetime(t):
 	time_str = '%02d:%02d%s' % (hour, t.minute, half_day)
 
 	return date_str + ' ' + time_str + u_str
+
+
+def update_check(pythonPath):
+    try:
+        logger.info("Current client version: %s" % (client_version.client_version))
+        output = Popen(["curl", "-s", "https://garote.bdmonkeys.net/epaper_client/client_version.xml"], stdout=PIPE, stderr=STDOUT).communicate()[0]
+        output_text = output.decode('utf-8')
+        version_match = re.search(r'<ClientVersion>(\d+)</ClientVersion>', output_text)
+        if not version_match:
+            logger.error("Could not determine server client version.")
+            return
+        server_client_version = int(version_match.group(1))
+        logger.info("Server client version: %s" % (server_client_version))
+        if (server_client_version <= client_version.client_version):
+            return
+        logger.info('Updating Client from v%s to v%s' % (client_version.client_version, server_client_version))
+        zipped_client = urllib.request.urlopen("https://garote.bdmonkeys.net/epaper_client/client.zip")
+        zipped_client_file = open(os.path.join(os.path.dirname(__file__), 'client.zip'), "wb")
+        shutil.copyfileobj(zipped_client, zipped_client_file)
+        zipped_client.close()
+        zipped_client_file.close()
+        result = call(["unzip", "-o", "-d", ".", "client.zip"])
+        #call(["xattr", "-d", "com.apple.quarantine" ,"./client.command"])
+        logger.info('Updated to new client version.  Restarting %s' % (' '.join([pythonPath] + sys.argv)))
+        os.execv(pythonPath, [pythonPath] + sys.argv)
+    except urllib.error.HTTPError as e:
+        logger.error("HTTP Error during update check: %s" % (str(e)))
+    except urllib.error.URLError as e:
+        logger.error("URL Error during update check: %s" % (str(e)))
+    except Exception as e:
+        s = traceback.format_exception(e)
+        logger.error(''.join(s))
 
 
 if __name__ == "__main__":

@@ -30,15 +30,13 @@
 # sudo ln -s ~/Documents/epaper_frame-color/cycle_image.service /etc/systemd/system/
 # sudo systemctl enable cycle_image.service
 
-import argparse, os, re, sys, random, logging, traceback, calendar, shutil, urllib.request
+import argparse, os, sys, random, logging, calendar
 import subprocess
-from subprocess import Popen,call,PIPE,STDOUT
 from send_png_to_display import send_png_to_display
 from datetime import *
 from common_utils import *
 from image_database import *
 from pisugar_battery import PiSugarBattery
-import client_version
 
 
 def cycle_image(verbose=False, specific_id=None):
@@ -144,38 +142,6 @@ def cycle_image(verbose=False, specific_id=None):
             logger.error("Failed to set new wakeup time in PiSugar 3!")
 
         subprocess.check_call("sudo shutdown -P now", shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
-
-
-def update_check(pythonPath):
-    try:
-        logger.info("Current client version: %s" % (client_version.client_version))
-        output = Popen(["curl", "-s", "https://garote.bdmonkeys.net/epaper_client/client_version.xml"], stdout=PIPE, stderr=STDOUT).communicate()[0]
-        output_text = output.decode('utf-8')
-        version_match = re.search(r'<ClientVersion>(\d+)</ClientVersion>', output_text)
-        if not version_match:
-            logger.error("Could not determine server client version.")
-            return
-        server_client_version = int(version_match.group(1))
-        logger.info("Server client version: %s" % (server_client_version))
-        if (server_client_version <= client_version.client_version):
-            return
-        logger.info('Updating Client from v%s to v%s' % (client_version.client_version, server_client_version))
-        zipped_client = urllib.request.urlopen("https://garote.bdmonkeys.net/epaper_client/client.zip")
-        zipped_client_file = open(os.path.join(os.path.dirname(__file__), 'client.zip'), "wb")
-        shutil.copyfileobj(zipped_client, zipped_client_file)
-        zipped_client.close()
-        zipped_client_file.close()
-        result = call(["unzip", "-o", "-d", ".", "client.zip"])
-        #call(["xattr", "-d", "com.apple.quarantine" ,"./client.command"])
-        logger.info('Updated to new client version.  Restarting %s' % (' '.join([pythonPath] + sys.argv)))
-        os.execv(pythonPath, [pythonPath] + sys.argv)
-    except urllib.error.HTTPError as e:
-        logger.error("HTTP Error during update check: %s" % (str(e)))
-    except urllib.error.URLError as e:
-        logger.error("URL Error during update check: %s" % (str(e)))
-    except Exception as e:
-        s = traceback.format_exception(e)
-        logger.error(''.join(s))
 
 
 if __name__ == "__main__":
