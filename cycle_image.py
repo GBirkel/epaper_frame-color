@@ -138,7 +138,9 @@ def cycle_image(verbose=False, specific_id=None):
             logger.info("On battery power.  Will disable wifi and power down automatically.")
         subprocess.check_call("sudo iwconfig wlan0 txpower off", shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
 
-        if piSugarBattery.set_alarm_for_seconds_from_now(int(config['interval'])) == False:
+        if piSugarBattery.set_alarm_for_seconds_from_now(int(config['interval'])):
+            logger.info("Set new wakeup time in PiSugar 3 for %i seconds from now." % (int(config['interval'])))
+        else:
             logger.error("Failed to set new wakeup time in PiSugar 3!")
 
         subprocess.check_call("sudo shutdown -P now", shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
