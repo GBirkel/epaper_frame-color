@@ -84,12 +84,28 @@ if __name__ == "__main__":
     args.add_argument("--quiet", "-q", action='store_false', dest='verbose',
                       help="reduce log output")
     args.add_argument('--in', type=argparse.FileType('rb'), default=sys.stdin, dest='input_file',
-                      help='Input image file', required=True)
+                      help='Input image file', required=False)
     args.add_argument('--out', type=argparse.FileType('wb'), default=sys.stdout, dest='output_file',
-                      help='Output PNG file', required=True)
+                      help='Output PNG file', required=False)
+    args.add_argument('--folder', type=str, default=None, dest='image_folder',
+                      help='Folder of images to prepare', required=False)
+
     args = args.parse_args()
 
     set_up_logger()
+
+    if args.image_folder is not None:
+        # Process all images in the folder
+        for filename in os.listdir(args.image_folder):
+            if filename.lower().endswith(('.jpg', '.jpeg', '.bmp', '.gif')):
+                input_path = os.path.join(args.image_folder, filename)
+                output_path = os.path.join(args.image_folder, f"{filename.rsplit('.', 1)[0]}-6color.png")
+                prepare_image(
+                    verbose=args.verbose,
+                    input_file=input_path,
+                    output_file=output_path
+                )
+        sys.exit(0)
 
     prepare_image(
         verbose=args.verbose,
