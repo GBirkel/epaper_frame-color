@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
     set_up_logger()
 
-    update_check(sys.executable)
+    update_check()
 
     cycle_image(
         verbose=args.verbose,

@@ -1,5 +1,6 @@
 import os, re, sys, logging, traceback, shutil, urllib.request
 import xml.dom.minidom
+from subprocess import Popen, call, check_call, check_output, PIPE, STDOUT
 from datetime import tzinfo, timedelta
 import client_version
 
@@ -97,7 +98,24 @@ def pretty_datetime(t):
 	return date_str + ' ' + time_str + u_str
 
 
-def update_check(pythonPath):
+def run_and_show_command(command):
+    print('Running command: %s' % (' '.join(command)))
+    try:
+        output = Popen(command, stdout=PIPE, stderr=STDOUT).communicate()[0]
+        outpur_str = output.decode('utf-8')
+        print(outpur_str)
+        return outpur_str
+    except Exception as e:
+        logger.error("Error running command '%s': %s" % (command, str(e)))
+        return None
+
+
+def update_check():
+    config = read_config()
+    if config is None:
+        logger.error("Could not read configuration file for update check.")
+        return
+    pythonPath = sys.executable
     try:
         logger.info("Current client version: %s" % (client_version.client_version))
         output = Popen(["curl", "-s", "https://garote.bdmonkeys.net/epaper_client/client_version.xml"], stdout=PIPE, stderr=STDOUT).communicate()[0]
@@ -116,8 +134,9 @@ def update_check(pythonPath):
         shutil.copyfileobj(zipped_client, zipped_client_file)
         zipped_client.close()
         zipped_client_file.close()
-        result = call(["unzip", "-o", "-d", ".", "client.zip"])
-        #call(["xattr", "-d", "com.apple.quarantine" ,"./client.command"])
+        result = call(["unzip", "-o", "client.zip", "-d", "."])
+        result = call(["rm", "client.zip"])
+        result = call(["chown", "-R", "garote:garote", config['installpath']])
         logger.info('Updated to new client version.  Restarting %s' % (' '.join([pythonPath] + sys.argv)))
         os.execv(pythonPath, [pythonPath] + sys.argv)
     except urllib.error.HTTPError as e:
