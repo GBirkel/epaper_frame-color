@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 
 	if (argc == 3) {
         display_message = true;
-        message_ptr = argv[3];
+        message_ptr = argv[2];
     }
 
     char *Pathname = argv[1];
