@@ -65,7 +65,7 @@ class PiSugarBattery:
     def get_real_time_clock(self):
         try:
             yrRaw = self._bus.read_byte_data(PiSugar3_Addr, 0x31)
-            mon = self._bus.read_byte_data(PiSugar3_Addr, 0x32)
+            monRaw = self._bus.read_byte_data(PiSugar3_Addr, 0x32)
             dayRaw = self._bus.read_byte_data(PiSugar3_Addr, 0x33)
             hourRaw = self._bus.read_byte_data(PiSugar3_Addr, 0x35)
             minRaw = self._bus.read_byte_data(PiSugar3_Addr, 0x36)
@@ -77,6 +77,7 @@ class PiSugarBattery:
             # These are hexadecimal values mocked to look like decimals,
             # e.g. 0x36 is actually 36 minutes, not 54 minutes.
             yr = hexAsDec(yrRaw)
+            mon = hexAsDec(monRaw)
             day = hexAsDec(dayRaw)
             hour = hexAsDec(hourRaw)
             min = hexAsDec(minRaw)
