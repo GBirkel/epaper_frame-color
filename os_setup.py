@@ -70,22 +70,6 @@ gpio=8=op,dl
     print('Done.')
 
 
-def append_to_file(filename, file_as_string):
-    f = codecs.open(filename, "a", "UTF-8")
-    f.write(file_as_string)
-    f.close()
-
-
-def unregister_service():
-    print('Unregistering service...')
-    try:
-        output = subprocess.check_output('sudo systemctl disable cycle_image.service', shell=True)
-    except subprocess.CalledProcessError:
-        print("Error disabling service via systemctl!")
-        sys.exit(2)
-    print('Done.')
-
-
 if __name__ == "__main__":
     args = argparse.ArgumentParser(description="Run various OS customization commands.")
     args.add_argument('--wifipassword', type=str, default=None, dest='wifipassword',
