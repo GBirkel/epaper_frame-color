@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 
 	if (argc == 3) {
         display_message = true;
-        message_ptr = argv[4];
+        message_ptr = argv[3];
     }
 
     char *Pathname = argv[1];
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     GUI_ReadBmp(Pathname, 0, 0);
     printf("epd: Paint_DrawString_EN\r\n");
     if (display_message) {
-        Paint_DrawString_EN(10, 10, message_ptr, &Font24, EPD_13IN3E_WHITE, EPD_13IN3E_BLACK);
+        Paint_DrawString_EN(10, 10, message_ptr, &Font16, EPD_13IN3E_WHITE, EPD_13IN3E_BLACK);
     }
     printf("epd: EPD_13IN3E_Display\r\n");
     EPD_13IN3E_Display(Image);
