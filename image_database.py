@@ -277,6 +277,8 @@ def report_image_as_displayed(cur, image_id, charging, charge_level):
     :param cur: database cursor
     :param image_id: id of image
     """
+    if not charging:
+        charging = False
     current_date = calendar.timegm(datetime.now(UTC).utctimetuple())
     data = {
         "id": image_id,
