@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     GUI_ReadBmp(Pathname, 0, 0);
     printf("epd: Paint_DrawString_EN\r\n");
     if (display_message) {
-        Paint_DrawString_EN(10, 10, message_ptr, &Font16, EPD_13IN3E_WHITE, EPD_13IN3E_BLACK);
+        Paint_DrawString_EN(10, 10, message_ptr, &Font12, EPD_13IN3E_WHITE, EPD_13IN3E_BLACK);
     }
     printf("epd: EPD_13IN3E_Display\r\n");
     EPD_13IN3E_Display(Image);
