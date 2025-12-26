@@ -59,7 +59,9 @@ def create_tables_if_missing(conn):
     conn.execute("""
         CREATE TABLE IF NOT EXISTS status (
             last_sync REAL,
-            last_display REAL
+            last_display REAL,
+            last_update_check REAL,
+            cycle_count INTEGER NOT NULL DEFAULT 0
         )""")
 
     conn.execute("""
@@ -111,20 +113,24 @@ def create_tables_if_missing(conn):
         """)
 
 
-def get_status_or_defaults(cur, last_sync, last_display):
+def get_status_or_defaults(cur, last_sync=None, last_display=None, last_update_check=None, cycle_count=0):
     """ get values from the current status record, or create a new one if missing
     :param cur: database cursor
     :param last_sync: default last_sync value
     :param last_display: default last_display value
+    :param last_update_check: default last_update_check value
+    :param cycle_count: default cycle_count value
     """
-    cur.execute("SELECT last_sync, last_display FROM status")
+    cur.execute("SELECT last_sync, last_display, last_update_check, cycle_count FROM status")
     row = cur.fetchone()
     if not row:
-        cur.execute("INSERT INTO status (last_sync, last_display) VALUES (?, ?)", (last_sync, last_display))
+        cur.execute("INSERT INTO status (last_sync, last_display, last_update_check, cycle_count) VALUES (?, ?, ?, ?)", (last_sync, last_display, last_update_check, cycle_count))
     else:
         last_sync = row[0]
         last_display = row[1]
-    status = {"last_sync": last_sync, "last_display": last_display}
+        last_update_check = row[2]
+        cycle_count = row[3]
+    status = {"last_sync": last_sync, "last_display": last_display, "last_update_check": last_update_check, "cycle_count": cycle_count}
     return status
 
 
@@ -133,7 +139,7 @@ def set_status(cur, status):
     :param cur: database cursor
     :param status: sync status record
     """
-    cur.execute("UPDATE status SET last_sync = ?, last_display = ?", (status['last_sync'], status['last_display']))
+    cur.execute("UPDATE status SET last_sync = ?, last_display = ?, last_update_check = ?, cycle_count = ?", (status['last_sync'], status['last_display'], status['last_update_check'], status['cycle_count']))
 
 
 def get_or_insert_image_group(cur, name):

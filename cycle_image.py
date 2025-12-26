@@ -30,10 +30,10 @@
 # sudo ln -s ~/Documents/epaper_frame-color/cycle_image.service /etc/systemd/system/
 # sudo systemctl enable cycle_image.service
 
-import argparse, os, sys, random, logging, calendar
+import argparse, os, sys, random, logging, calendar, time as nondate_time
 import subprocess
 from send_png_to_display import send_png_to_display
-from datetime import *
+from datetime import datetime, UTC as datetime_UTC
 from common_utils import *
 from image_database import *
 from pisugar_battery import PiSugarBattery
@@ -42,6 +42,9 @@ from pisugar_battery import PiSugarBattery
 def cycle_image(verbose=False, specific_id=None):
 
     logger = logging.getLogger("epaper_frame")
+
+    logger.debug("Waiting 5 seconds before taking battery reading.")
+    nondate_time.sleep(5)
 
     # Instantiate the battery reader and do a first measurement
     piSugarBattery = PiSugarBattery()
@@ -60,14 +63,14 @@ def cycle_image(verbose=False, specific_id=None):
     if alarm_setting is None:
         logger.error("Error reading alarm time.")
     else:
-        d = datetime.fromtimestamp(alarm_setting, UTC)
+        d = datetime.fromtimestamp(alarm_setting, datetime_UTC)
         tz_utc = fancytzutc()
         d = d.replace(tzinfo=tz_utc)
         logger.info("PiSugar 3 last alarm time: %s" % (d.isoformat()))
 
     config = read_config()
     if config is None:
-        logger.error('Error reading your config.xml file!')
+        logger.error('Error reading config.xml file!')
         sys.exit(2)
 
     conn = None
@@ -88,8 +91,8 @@ def cycle_image(verbose=False, specific_id=None):
     if verbose:
         logger.info("%s images in library." % (len(images)))
         if status['last_display'] is not None:
-            last_display_datetime = datetime.fromtimestamp(status['last_display'], UTC)
-            logger.info("Last run at %s." % (pretty_datetime(last_display_datetime)))
+            last_display_datetime = datetime.fromtimestamp(status['last_display'], datetime_UTC)
+            logger.info("Last image display was at %s." % (pretty_datetime(last_display_datetime)))
 
     chosen_image = None
     if len(images) > 0:
@@ -101,43 +104,74 @@ def cycle_image(verbose=False, specific_id=None):
         if chosen_image['last_display'] is None:
             logger.info("First time displaying this image.")
         else:
-            last_display_datetime = datetime.fromtimestamp(chosen_image['last_display'], UTC)
+            last_display_datetime = datetime.fromtimestamp(chosen_image['last_display'], datetime_UTC)
             logger.info("Display count %s, last displayed %s." % (chosen_image['display_count'], last_display_datetime))
 
     image_path = os.path.join(config['library'], chosen_image['group_name'], chosen_image['filename'])
 
+    logger.debug("Waiting 5 seconds before taking second battery reading.")
+    nondate_time.sleep(5)
+
     capacity = None
+    if battery_charging_status is None:
+        if verbose:
+            logger.warning("PiSugar 3 battery status is undetermined.  Will try for one minute to get a solid reading.")
+        for i in range(6):
+            nondate_time.sleep(10)
+            battery_charging_status = piSugarBattery.charging_status()
+            if battery_charging_status is not None:
+                capacity = piSugarBattery.refine_capacity()
+
     message = None
     if battery_charging_status is not None:
         capacity = piSugarBattery.refine_capacity()
         message = "%2i%%" % capacity
         if verbose:
-            logger.info("PiSugar 3 battery second reading: %2i%%." % (capacity))
+            logger.info("PiSugar 3 battery final reading: %2i%%." % (capacity))
 
     send_png_to_display(verbose, image_path, message)
     report_image_as_displayed(cur, chosen_image['id'], battery_charging_status, capacity)
 
-    current_date = calendar.timegm(datetime.now(UTC).utctimetuple())
+    current_date = calendar.timegm(datetime.now(datetime_UTC).utctimetuple())
     status['last_display'] = current_date
-    set_status(cur, status)
+    status['cycle_count'] += 1    
 
+    run_update_check = False
+    if status['last_update_check'] is None:
+        run_update_check = True
+    elif (current_date - status['last_update_check']) > (24 * 60 * 60 * 14):  # Two weeks
+        run_update_check = True
+    if run_update_check:
+        if verbose:
+            logger.info("Will run update check.")
+        status['last_update_check'] = current_date
+    set_status(cur, status)
     finish_with_database(conn, cur)
 
     if battery_charging_status is None:
         if verbose:
-            logger.warning("PiSugar 3 battery status is undetermined.  Will remain powered on and enable wifi.")
+            logger.warning("PiSugar 3 battery status is undetermined.  Will wait for two minutes with wifi enabled, then power down.")
         subprocess.check_call("sudo iwconfig wlan0 txpower on", shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+        nondate_time.sleep(120)
+        subprocess.check_call("sudo shutdown -P now", shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
 
     elif battery_charging_status == True:
         if verbose:
             logger.info("PiSugar 3 battery is charging.  Will remain powered on and enable wifi.")
         subprocess.check_call("sudo iwconfig wlan0 txpower on", shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
 
+        if run_update_check:
+            did_update = update_check()
+
     else:
         if piSugarBattery.set_alarm_for_seconds_from_now(int(config['interval'])):
             logger.info("Set new wakeup time in PiSugar 3 for %i seconds from now." % (int(config['interval'])))
         else:
             logger.error("Failed to set new wakeup time in PiSugar 3!")
+
+        if run_update_check:
+            subprocess.check_call("sudo iwconfig wlan0 txpower on", shell=True, stdout=sys.stdout, stderr=subprocess.STDOUT)
+            did_update = update_check()
 
         if verbose:
             logger.info("On battery power.  Will disable wifi and power down automatically.")
@@ -155,8 +189,6 @@ if __name__ == "__main__":
     args = args.parse_args()
 
     set_up_logger()
-
-    update_check()
 
     cycle_image(
         verbose=args.verbose,
