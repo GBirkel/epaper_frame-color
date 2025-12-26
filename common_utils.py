@@ -114,8 +114,8 @@ def update_check():
     config = read_config()
     if config is None:
         logger.error("Could not read configuration file for update check.")
-        return
-    pythonPath = sys.executable
+        return False
+    #pythonPath = sys.executable
     try:
         logger.info("Current client version: %s" % (client_version.client_version))
         output = Popen(["curl", "-s", "https://garote.bdmonkeys.net/epaper_client/client_version.xml"], stdout=PIPE, stderr=STDOUT).communicate()[0]
@@ -137,8 +137,10 @@ def update_check():
         result = call(["unzip", "-o", "client.zip", "-d", "."])
         result = call(["rm", "client.zip"])
         result = call(["chown", "-R", "garote:garote", config['installpath']])
-        logger.info('Updated to new client version.  Restarting %s' % (' '.join([pythonPath] + sys.argv)))
-        os.execv(pythonPath, [pythonPath] + sys.argv)
+        logger.info('Updated to new client version.')
+        #logger.info('Updated to new client version.  Restarting %s' % (' '.join([pythonPath] + sys.argv)))
+        #os.execv(pythonPath, [pythonPath] + sys.argv)
+        return True
     except urllib.error.HTTPError as e:
         logger.error("HTTP Error during update check: %s" % (str(e)))
     except urllib.error.URLError as e:
@@ -146,6 +148,7 @@ def update_check():
     except Exception as e:
         s = traceback.format_exception(e)
         logger.error(''.join(s))
+    return False
 
 
 if __name__ == "__main__":
